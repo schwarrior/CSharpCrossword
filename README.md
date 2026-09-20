@@ -1,7 +1,7 @@
 CSharp, Interrupted Crossword
 =============================
 
-# Initial Claude Conversation 2026-09-19
+# Claude Conversation Alpha 2026-09-19
 
 ## Prompt
 
@@ -14,7 +14,21 @@ Tried for most of the day. Kept reaching "tool-limit for this turn". (Currently 
 In the meantime, wrote my own clues and conceived the theme "C Sharp, Interrupted".
 
 
-# Self-Authored Clues
+# Claude Conversation Beta 2026-09-20
+
+
+Developing a crossword puzzle. Theme is "CSharp, Interrrupted". I've created an initial batch of clues/words. Please review these and suggest 30 more on-theme clue/word pairs. Goal is build a large pool of themed clues/words that can be selected from to create a crossword puzzle. Ideally the crossword would approach the size and complexity of the New York Times Crossword.
+
+
+# Claude Conversation Gamma 2026-02-20
+
+Please create a crossword puzzle from the following pool of clues/words. Use as many clues as you can without creating an excessively sprawing and loose puzzle layout. Okay to repeat clues where there are different unique word answers. Produce it as an interactive HTML5 page, using JavaScript possibly Canvas. It should be a self-contained single page web app.
+
+
+# CSharp, Interrupted: Clues
+
+
+## Robert Authored
 
 Make it complicated Smartie, interrupted
 KISS
@@ -348,3 +362,44 @@ Interrrupted disposal
 GC
 GARBAGE
 DESTRUCTOR
+
+
+# Claude Inspired
+
+A box, uninterrupted
+OBJECT
+
+Value, interrupted
+NULL
+
+Overflow, interrupted
+CHECKED
+
+Laziness, interrupted
+TOLIST
+TOARRAY
+
+Static typing, interrupted
+DYNAMIC
+
+Compiler warning, interrupted
+PRAGMA
+
+Execution, interrupted
+BREAKPOINT
+
+Optional, interrupted
+REQUIRED
+
+Concrete instances, interrupted
+INTERFACE
+
+Silence, interrupted
+THROW
+
+Lifespan, interrupted
+DISPOSE
+
+Task, interrupted
+CANCEL
+CANCELLATIONTOKEN

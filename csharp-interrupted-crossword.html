@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>C#, Interrupted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg: #f5f3fb;
+    --bg-grid: #fbfaff;
+    --panel: #ffffff;
+    --panel-2: #f0edf9;
+    --ink: #241f38;
+    --ink-dim: #6b6584;
+    --ink-faint: #a49ec2;
+    --line: #ddd7ef;
+    --line-strong: #c6bde6;
+    --accent: #6d28d9;
+    --accent-soft: #ede6fd;
+    --accent-soft-2: #ddccfb;
+    --accent-ink: #ffffff;
+    --good: #0f9d63;
+    --good-soft: #d9f5e7;
+    --bad: #d6304a;
+    --bad-soft: #fbdde2;
+    --shadow: 0 1px 2px rgba(36,31,56,.06), 0 8px 24px -12px rgba(36,31,56,.18);
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #16131f;
+      --bg-grid: #1b1729;
+      --panel: #1e1a2c;
+      --panel-2: #262034;
+      --ink: #ece8f8;
+      --ink-dim: #a79fc4;
+      --ink-faint: #6b6284;
+      --line: #342c49;
+      --line-strong: #453a63;
+      --accent: #a684f5;
+      --accent-soft: #2c2447;
+      --accent-soft-2: #3a2f5c;
+      --accent-ink: #14101f;
+      --good: #4fd894;
+      --good-soft: #17352a;
+      --bad: #ff6b81;
+      --bad-soft: #3a1f28;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #16131f;
+    --bg-grid: #1b1729;
+    --panel: #1e1a2c;
+    --panel-2: #262034;
+    --ink: #ece8f8;
+    --ink-dim: #a79fc4;
+    --ink-faint: #6b6284;
+    --line: #342c49;
+    --line-strong: #453a63;
+    --accent: #a684f5;
+    --accent-soft: #2c2447;
+    --accent-soft-2: #3a2f5c;
+    --accent-ink: #14101f;
+    --good: #4fd894;
+    --good-soft: #17352a;
+    --bad: #ff6b81;
+    --bad-soft: #3a1f28;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing: border-box; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    padding-inline: 16px;
+    padding-block: 28px 40px;
+  }
+  .mono{ font-family: "JetBrains Mono", ui-monospace, "SF Mono", monospace; }
+
+  .page{ max-width: 1180px; margin-inline: auto; }
+
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+  .brand{ display:flex; flex-direction:column; gap:6px; }
+  .brand .kicker{
+    font-family:"JetBrains Mono", monospace; font-size:12.5px; font-weight:600;
+    color: var(--accent); letter-spacing:.06em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .brand .kicker .dot{ width:7px;height:7px;border-radius:50%; background: var(--accent); animation: blink 1.6s steps(1) infinite; }
+  @media (prefers-reduced-motion: reduce){ .brand .kicker .dot{ animation:none; } }
+  @keyframes blink{ 0%,49%{opacity:1;} 50%,100%{opacity:.25;} }
+  h1{
+    font-family:"JetBrains Mono", monospace; font-weight:800;
+    font-size: clamp(28px, 4.4vw, 44px);
+    margin:0; line-height:1.05; letter-spacing:-0.01em;
+    text-wrap: balance;
+  }
+  h1 .brk{ color: var(--accent); }
+  .subtitle{
+    color: var(--ink-dim); font-size:14px; max-width:52ch; margin-top:2px;
+  }
+  .credit{
+    font-family:"JetBrains Mono", monospace; font-size:12px; color: var(--ink-faint);
+    text-align:right; white-space:nowrap;
+  }
+  .credit b{ color: var(--ink-dim); font-weight:600; }
+
+  .layout{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 360px;
+    gap: 22px;
+    align-items:start;
+  }
+  @media (max-width: 900px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- status / clue bar ---- */
+  .statusbar{
+    display:flex; align-items:center; gap:10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .statusbar .navbtn{
+    all:unset; cursor:pointer; color: var(--ink-dim);
+    font-family:"JetBrains Mono",monospace; font-size:15px; line-height:1;
+    padding:4px 7px; border-radius:6px;
+  }
+  .statusbar .navbtn:hover{ background: var(--panel-2); color: var(--ink); }
+  .statusbar .clue-num{
+    font-family:"JetBrains Mono",monospace; font-weight:700; color: var(--accent-ink);
+    background: var(--accent); border-radius:6px; padding:3px 8px; font-size:13px;
+    white-space:nowrap;
+  }
+  .statusbar .clue-text{ flex:1; min-width:0; font-size:14.5px; }
+  .statusbar .clue-len{ color: var(--ink-faint); font-family:"JetBrains Mono",monospace; font-size:12.5px; white-space:nowrap; }
+
+  /* ---- grid card ---- */
+  .grid-card{ padding: 14px; }
+  .grid-wrap{
+    background: var(--bg-grid);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    display:flex; justify-content:center;
+    overflow:auto;
+  }
+  canvas{ display:block; touch-action: manipulation; cursor: pointer; }
+
+  .toolbar{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-top: 14px;
+  }
+  button.btn{
+    font-family:"Inter", sans-serif; font-weight:600; font-size:13px;
+    color: var(--ink); background: var(--panel-2);
+    border:1px solid var(--line-strong); border-radius:7px;
+    padding: 8px 13px; cursor:pointer;
+  }
+  button.btn:hover{ border-color: var(--accent); color: var(--accent); }
+  button.btn:focus-visible, .navbtn:focus-visible, .cluerow:focus-visible{ outline: 2px solid var(--accent); outline-offset:2px; }
+  button.btn.primary{ background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button.btn.primary:hover{ filter:brightness(1.06); color:var(--accent-ink); }
+
+  .menu{ position:relative; }
+  .menu-list{
+    position:absolute; top: calc(100% + 6px); left:0; z-index:5;
+    background: var(--panel); border:1px solid var(--line); border-radius:8px;
+    box-shadow: var(--shadow); min-width: 172px; padding:5px; display:none;
+  }
+  .menu.open .menu-list{ display:block; }
+  .menu-list button{
+    all:unset; display:block; width:100%; box-sizing:border-box;
+    padding:8px 10px; font-size:13px; border-radius:6px; cursor:pointer; color: var(--ink);
+  }
+  .menu-list button:hover{ background: var(--accent-soft); color: var(--accent); }
+
+  .spacer{ flex:1; }
+  .timer{
+    font-family:"JetBrains Mono", monospace; font-weight:700; font-size:14px;
+    color: var(--ink-dim); font-variant-numeric: tabular-nums;
+    display:flex; align-items:center; gap:6px;
+  }
+  .timer svg{ width:14px; height:14px; opacity:.7; }
+
+  /* ---- clue panel ---- */
+  .clues{
+    padding: 6px 0 10px;
+    max-height: none;
+  }
+  .clue-tabs{
+    display:none; gap:2px; padding: 10px 10px 0;
+  }
+  @media (max-width: 639px){
+    .clue-tabs{ display:flex; }
+  }
+  .clue-tabs button{
+    all:unset; cursor:pointer; flex:1; text-align:center;
+    font-family:"JetBrains Mono",monospace; font-weight:700; font-size:12px;
+    letter-spacing:.05em; color: var(--ink-dim);
+    padding: 9px 6px; border-radius: 7px 7px 0 0;
+    border-bottom: 2px solid transparent;
+  }
+  .clue-tabs button.active{ color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+  .clue-cols{
+    display:grid; grid-template-columns: 1fr 1fr; gap:0;
+    max-height: min(74vh, 720px); overflow-y: auto;
+  }
+  @media (max-width: 900px){ .clue-cols{ grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 639px){ .clue-cols{ max-height: min(60vh, 560px); } }
+  .clue-col{ padding: 10px; min-width:0; }
+  .clue-col h3{
+    font-family:"JetBrains Mono",monospace; font-size:11.5px; letter-spacing:.08em;
+    color: var(--ink-faint); margin: 2px 4px 8px; font-weight:700;
+  }
+  @media (max-width: 639px){
+    .clue-col h3{ display:none; }
+  }
+  ul.cluelist{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
+  .cluerow{
+    all:unset; cursor:pointer; display:flex; gap:7px;
+    padding: 6px 7px; border-radius:6px; font-size:12.8px; line-height:1.35;
+    color: var(--ink);
+  }
+  .cluerow:hover{ background: var(--panel-2); }
+  .cluerow.active{ background: var(--accent-soft); color: var(--accent); }
+  .cluerow .n{
+    font-family:"JetBrains Mono",monospace; font-weight:700; color: var(--ink-faint);
+    min-width: 18px; text-align:right; flex-shrink:0;
+  }
+  .cluerow.active .n{ color: var(--accent); }
+  .cluerow.done{ opacity:.5; }
+  .cluerow.done .clue-t{ text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+  footer.legend{
+    display:flex; gap:16px; flex-wrap:wrap; align-items:center;
+    padding: 12px 16px 0; margin-top: 18px;
+    font-size:12px; color: var(--ink-faint); font-family:"JetBrains Mono",monospace;
+  }
+  footer.legend .sw{ width:10px; height:10px; border-radius:3px; display:inline-block; margin-right:5px; vertical-align:-1px; }
+
+  /* ---- win modal ---- */
+  .overlay{
+    position: fixed; inset:0; background: rgba(10,8,18,.55);
+    display:none; align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background: var(--panel); border:1px solid var(--line); border-radius:12px;
+    box-shadow: var(--shadow); max-width: 420px; width:100%;
+    padding: 26px; text-align:center;
+  }
+  .modal .icon{
+    width:46px;height:46px;border-radius:50%; background:var(--good-soft); color:var(--good);
+    display:flex; align-items:center; justify-content:center; margin: 0 auto 14px; font-size:22px;
+  }
+  .modal h2{ font-family:"JetBrains Mono",monospace; margin:0 0 8px; font-size:20px; }
+  .modal p{ color: var(--ink-dim); font-size:14px; margin: 0 0 4px; }
+  .modal .build{
+    font-family:"JetBrains Mono",monospace; font-size:12.5px; color: var(--ink-faint);
+    background: var(--panel-2); border-radius:7px; padding:10px 12px; margin: 16px 0; text-align:left;
+  }
+  .modal .build .ok{ color: var(--good); }
+  .modal button.btn{ margin-top:6px; }
+
+  .sr-hidden-input{
+    position:fixed; top:0; left:0; width:1px; height:1px;
+    opacity:0; border:0; padding:0; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="brand">
+      <div class="kicker"><span class="dot"></span>// puzzle.cs</div>
+      <h1>C<span class="brk">#</span>, Interrupted</h1>
+      <div class="subtitle">Every clue in this grid describes something &mdash; a keyword, a concept, a habit &mdash; that's been <em>interrupted</em>. Fill in what's left.</div>
+    </div>
+    <div class="credit">clues by <b>Rob</b> &amp; <b>Claude</b><br>58 answers &middot; 23&times;23 grid</div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <div class="card statusbar" id="statusbar">
+        <button class="navbtn" id="prevClue" title="Previous clue" aria-label="Previous clue">&#8592;</button>
+        <span class="clue-num" id="clueNum">1A</span>
+        <span class="clue-text" id="clueText">Loading&hellip;</span>
+        <span class="clue-len" id="clueLen"></span>
+        <button class="navbtn" id="nextClue" title="Next clue" aria-label="Next clue">&#8594;</button>
+      </div>
+
+      <div class="card grid-card">
+        <div class="grid-wrap">
+          <canvas id="grid" tabindex="0" aria-label="Crossword grid"></canvas>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn primary" id="btnCheck">Check puzzle</button>
+          <div class="menu" id="revealMenu">
+            <button class="btn" id="revealBtn">Reveal &#9662;</button>
+            <div class="menu-list">
+              <button data-reveal="letter">Reveal letter</button>
+              <button data-reveal="word">Reveal word</button>
+              <button data-reveal="puzzle">Reveal puzzle</button>
+            </div>
+          </div>
+          <button class="btn" id="btnClear">Clear puzzle</button>
+          <div class="spacer"></div>
+          <div class="timer" id="timer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span id="timerText">00:00</span>
+          </div>
+        </div>
+
+        <footer class="legend">
+          <span><span class="sw" style="background:var(--accent-soft-2); border:1px solid var(--line-strong)"></span>current word</span>
+          <span><span class="sw" style="background:var(--good-soft); border:1px solid var(--good)"></span>correct</span>
+          <span><span class="sw" style="background:var(--bad-soft); border:1px solid var(--bad)"></span>needs a fix</span>
+        </footer>
+      </div>
+    </div>
+
+    <div class="card clues">
+      <div class="clue-tabs">
+        <button class="active" data-tab="across">ACROSS</button>
+        <button data-tab="down">DOWN</button>
+      </div>
+      <div class="clue-cols">
+        <div class="clue-col" id="colAcross">
+          <h3>Across</h3>
+          <ul class="cluelist" id="listAcross"></ul>
+        </div>
+        <div class="clue-col" id="colDown">
+          <h3>Down</h3>
+          <ul class="cluelist" id="listDown"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input id="hiddenInput" class="sr-hidden-input" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" maxlength="1" aria-hidden="true">
+
+<div class="overlay" id="winOverlay">
+  <div class="modal">
+    <div class="icon" id="winIcon">&#10003;</div>
+    <h2 id="winTitle">Build succeeded</h2>
+    <p id="winSub">Every clue resolved correctly.</p>
+    <div class="build mono" id="winBuild"></div>
+    <button class="btn primary" id="winClose">Back to editor</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATA = {"rows":23,"cols":23,"entries":[{"number":1,"direction":"across","clue":"Mutability, interrupted","answer":"CONST","row":0,"col":0,"length":5},{"number":1,"direction":"down","clue":"Form, interrupted","answer":"CLOSE","row":0,"col":0,"length":5},{"number":2,"direction":"down","clue":"Gross, interrupted","answer":"NET","row":0,"col":11,"length":3},{"number":3,"direction":"down","clue":"Limited access, interrupted","answer":"PUBLIC","row":0,"col":19,"length":6},{"number":4,"direction":"down","clue":"MS Build, interrupted","answer":"DOTNET","row":1,"col":8,"length":6},{"number":5,"direction":"across","clue":"~Interrupt","answer":"DESTROY","row":1,"col":10,"length":7},{"number":6,"direction":"down","clue":"Optional, interrupted","answer":"REQUIRED","row":1,"col":14,"length":8},{"number":7,"direction":"across","clue":"From i in interrupted Select i.a","answer":"QUERY","row":1,"col":18,"length":5},{"number":8,"direction":"across","clue":"interruptA||interruptB","answer":"ORELSE","row":2,"col":0,"length":6},{"number":9,"direction":"down","clue":"ORM, Interrupted","answer":"ENTITY","row":2,"col":5,"length":6},{"number":10,"direction":"down","clue":"interruptA|interruptB","answer":"OR","row":3,"col":12,"length":2},{"number":11,"direction":"across","clue":"Main branch, interrupted","answer":"PULL","row":3,"col":17,"length":4},{"number":12,"direction":"down","clue":"interrupt!","answer":"FORGIVE","row":3,"col":22,"length":7},{"number":13,"direction":"across","clue":"Method, interrupted","answer":"RETURN","row":4,"col":3,"length":6},{"number":13,"direction":"down","clue":"Outline, interrupted","answer":"REGION","row":4,"col":3,"length":6},{"number":14,"direction":"across","clue":"Just for kids","answer":"VIRTUAL","row":4,"col":10,"length":7},{"number":15,"direction":"down","clue":"C# IDE, interrupted","answer":"VSCODE","row":5,"col":1,"length":6},{"number":16,"direction":"across","clue":"String, interrupted","answer":"CHAR","row":5,"col":19,"length":4},{"number":17,"direction":"across","clue":"$1000/year, interrupted","answer":"VS","row":6,"col":0,"length":2},{"number":18,"direction":"across","clue":"Switch, interrupted","answer":"GOTO","row":6,"col":3,"length":4},{"number":19,"direction":"across","clue":"Instantiation only","answer":"ABSTRACT","row":6,"col":10,"length":8},{"number":20,"direction":"down","clue":"Execution, interrupted","answer":"BREAKPOINT","row":6,"col":11,"length":10},{"number":21,"direction":"down","clue":"Concrete instances, interrupted","answer":"INTERFACE","row":8,"col":9,"length":9},{"number":22,"direction":"down","clue":"Mutability after constructor, interrupted","answer":"READONLY","row":8,"col":19,"length":8},{"number":23,"direction":"across","clue":"Static typing, interrupted","answer":"DYNAMIC","row":9,"col":1,"length":7},{"number":24,"direction":"down","clue":"Loop iteration, interrupted","answer":"CONTINUE","row":9,"col":7,"length":8},{"number":25,"direction":"across","clue":"interrupt&interruptB","answer":"AND","row":9,"col":11,"length":3},{"number":26,"direction":"down","clue":"Event interruption signature","answer":"DELEGATE","row":9,"col":13,"length":8},{"number":27,"direction":"across","clue":"null??interrupt","answer":"COALESCE","row":9,"col":15,"length":8},{"number":28,"direction":"down","clue":"Parent member, interrupted","answer":"OVERRIDE","row":9,"col":16,"length":8},{"number":29,"direction":"down","clue":"Make it complicated Smartie, interrupted","answer":"KISS","row":11,"col":3,"length":4},{"number":30,"direction":"across","clue":"$\"{interrupt}\"","answer":"INTERPOLATE","row":11,"col":6,"length":11},{"number":31,"direction":"across","clue":"Uninterrupted disposal","answer":"USING","row":12,"col":1,"length":5},{"number":32,"direction":"down","clue":"Interrupted disposal","answer":"GARBAGE","row":12,"col":5,"length":7},{"number":33,"direction":"across","clue":"interrupted?b:c","answer":"IIF","row":13,"col":7,"length":3},{"number":34,"direction":"down","clue":"interrupted?.b","answer":"BYPASS","row":13,"col":21,"length":6},{"number":35,"direction":"down","clue":"Continence, interrupted","answer":"DEPENDS","row":14,"col":1,"length":7},{"number":36,"direction":"across","clue":"Without interruption","answer":"FINALLY","row":14,"col":15,"length":7},{"number":37,"direction":"across","clue":"Public access, interrupted","answer":"PRIVATE","row":16,"col":1,"length":7},{"number":38,"direction":"across","clue":"Framework, enhanced","answer":"EXTEND","row":16,"col":13,"length":6},{"number":39,"direction":"down","clue":"To your madness, uninterrupted","answer":"METHOD","row":17,"col":8,"length":6},{"number":40,"direction":"across","clue":"By value parameter, interrupted","answer":"REF","row":17,"col":10,"length":3},{"number":41,"direction":"down","clue":"Interrupt().First().Second().Third()","answer":"FLUENT","row":17,"col":12,"length":6},{"number":42,"direction":"across","clue":"Parental interruption","answer":"BASE","row":17,"col":19,"length":4},{"number":42,"direction":"down","clue":"Sandwich, digitally interrupted","answer":"BYTE","row":17,"col":19,"length":4},{"number":43,"direction":"across","clue":"Overflow, interrupted","answer":"CHECKED","row":18,"col":3,"length":7},{"number":43,"direction":"down","clue":"Assembly language, interrupted","answer":"CLR","row":18,"col":3,"length":3},{"number":44,"direction":"across","clue":"i => i * i","answer":"LAMBDA","row":18,"col":12,"length":6},{"number":45,"direction":"down","clue":"Compile, interrupted","answer":"BUG","row":18,"col":15,"length":3},{"number":46,"direction":"down","clue":"32 or 64, interrupted","answer":"ANY","row":18,"col":17,"length":3},{"number":47,"direction":"across","clue":"!interrupt","answer":"NOT","row":19,"col":17,"length":3},{"number":48,"direction":"down","clue":"In the beginning, uninterrupted","answer":"CTOR","row":19,"col":22,"length":4},{"number":49,"direction":"across","clue":"Class, interrupted","answer":"STRUCT","row":20,"col":1,"length":6},{"number":50,"direction":"across","clue":"Profession, interrupted by AI","answer":"HACKER","row":20,"col":8,"length":6},{"number":51,"direction":"across","clue":"Program, interrupted","answer":"EXIT","row":20,"col":19,"length":4},{"number":52,"direction":"across","clue":"Children, interrupted","answer":"SEALED","row":22,"col":3,"length":6},{"number":53,"direction":"across","clue":"Instantiation, interrupted","answer":"STATIC","row":22,"col":11,"length":6},{"number":54,"direction":"across","clue":"Let in JavaScript and Swift, interrupted","answer":"VAR","row":22,"col":20,"length":3}]};
+  var ROWS = DATA.rows, COLS = DATA.cols;
+
+  // ---------- build cell model ----------
+  var cellsMap = Object.create(null); // "r,c" -> {r,c,letter,number,across,down,userInput,revealed}
+  function key(r,c){ return r + "," + c; }
+
+  DATA.entries.forEach(function(entry, idx){
+    var dr = entry.direction === "across" ? 0 : 1;
+    var dc = entry.direction === "across" ? 1 : 0;
+    for (var i = 0; i < entry.answer.length; i++){
+      var r = entry.row + dr*i, c = entry.col + dc*i;
+      var k = key(r,c);
+      var cell = cellsMap[k];
+      if (!cell){ cell = cellsMap[k] = { r:r, c:c, letter:"", number:null, across:null, down:null, userInput:"" }; }
+      cell.letter = entry.answer[i];
+      if (i === 0) cell.number = entry.number;
+      cell[entry.direction] = idx;
+    }
+  });
+
+  function entryCells(entry){
+    var dr = entry.direction === "across" ? 0 : 1;
+    var dc = entry.direction === "across" ? 1 : 0;
+    var out = [];
+    for (var i = 0; i < entry.answer.length; i++){
+      out.push({ r: entry.row + dr*i, c: entry.col + dc*i });
+    }
+    return out;
+  }
+
+  function entryComplete(entry){
+    return entryCells(entry).every(function(p){
+      var cell = cellsMap[key(p.r,p.c)];
+      return cell.userInput === cell.letter;
+    });
+  }
+
+  // ---------- selection state ----------
+  var sel = { r: null, c: null, dir: "across" };
+  var incorrect = Object.create(null);
+  var state = { started:false, won:false, revealedAll:false, elapsed:0, timerId:null };
+
+  function firstCellKey(){
+    for (var i = 0; i < DATA.entries.length; i++){
+      if (DATA.entries[i].direction === "across") return { r: DATA.entries[i].row, c: DATA.entries[i].col, entryIdx: i };
+    }
+    var e0 = DATA.entries[0];
+    return { r: e0.row, c: e0.col, entryIdx: 0 };
+  }
+
+  function currentEntry(){
+    if (sel.r === null) return null;
+    var cell = cellsMap[key(sel.r, sel.c)];
+    if (!cell) return null;
+    var idx = cell[sel.dir];
+    if (idx === null || idx === undefined){
+      idx = cell.across !== null && cell.across !== undefined ? cell.across : cell.down;
+      if (idx === null || idx === undefined) return null;
+      sel.dir = DATA.entries[idx].direction;
+    }
+    return DATA.entries[idx];
+  }
+
+  // ---------- canvas rendering ----------
+  var canvas = document.getElementById("grid");
+  var ctx = canvas.getContext("2d");
+  var cellSize = 30;
+
+  function computeCellSize(){
+    var wrap = canvas.parentElement;
+    var avail = wrap.clientWidth - 20;
+    var maxByWidth = Math.floor(avail / COLS);
+    var maxByHeight = Math.floor((window.innerHeight * 0.6) / ROWS);
+    cellSize = Math.max(16, Math.min(34, maxByWidth, maxByHeight));
+  }
+
+  function resizeCanvas(){
+    computeCellSize();
+    var dpr = window.devicePixelRatio || 1;
+    var w = COLS * cellSize, h = ROWS * cellSize;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    render();
+  }
+
+  function cssVar(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function render(){
+    var w = COLS * cellSize, h = ROWS * cellSize;
+    ctx.clearRect(0, 0, w, h);
+
+    var line = cssVar("--line");
+    var ink = cssVar("--ink");
+    var inkFaint = cssVar("--ink-faint");
+    var accent = cssVar("--accent");
+    var accentSoft2 = cssVar("--accent-soft-2");
+    var accentInk = cssVar("--accent-ink");
+    var bad = cssVar("--bad");
+    var badSoft = cssVar("--bad-soft");
+    var panel = cssVar("--bg-grid");
+
+    var entry = currentEntry();
+    var wordSet = Object.create(null);
+    if (entry){ entryCells(entry).forEach(function(p){ wordSet[key(p.r,p.c)] = true; }); }
+
+    ctx.font = "600 " + Math.round(cellSize * 0.5) + "px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    Object.keys(cellsMap).forEach(function(k){
+      var cell = cellsMap[k];
+      var x = cell.c * cellSize, y = cell.r * cellSize;
+      var isSel = sel.r === cell.r && sel.c === cell.c;
+      var inWord = wordSet[k];
+      var isIncorrect = incorrect[k];
+
+      var bg = panel;
+      if (inWord) bg = accentSoft2;
+      if (isIncorrect) bg = badSoft;
+      if (isSel) bg = accent;
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(x, y, cellSize, cellSize);
+
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, cellSize - 1, cellSize - 1);
+
+      if (cell.number){
+        ctx.save();
+        ctx.font = "700 " + Math.max(8, Math.round(cellSize * 0.26)) + "px 'JetBrains Mono', monospace";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = isSel ? accentInk : inkFaint;
+        ctx.fillText(cell.number, x + 2, y + 1);
+        ctx.restore();
+      }
+
+      if (cell.userInput){
+        var textColor = isSel ? accentInk : ink;
+        if (cell.revealed && !isSel) textColor = accent;
+        if (isIncorrect) textColor = bad;
+        ctx.fillStyle = textColor;
+        ctx.font = "600 " + Math.round(cellSize * 0.5) + "px 'JetBrains Mono', monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(cell.userInput, x + cellSize / 2, y + cellSize / 2 + 1);
+      }
+    });
+  }
+
+  // ---------- selection / UI sync ----------
+  var hiddenInput = document.getElementById("hiddenInput");
+  var clueNumEl = document.getElementById("clueNum");
+  var clueTextEl = document.getElementById("clueText");
+  var clueLenEl = document.getElementById("clueLen");
+
+  function dirAbbrev(d){ return d === "across" ? "A" : "D"; }
+
+  function refreshStatus(){
+    var entry = currentEntry();
+    if (!entry){ clueNumEl.textContent = "-"; clueTextEl.textContent = ""; clueLenEl.textContent = ""; return; }
+    clueNumEl.textContent = entry.number + dirAbbrev(entry.direction);
+    clueTextEl.textContent = entry.clue;
+    clueLenEl.textContent = "(" + entry.answer.length + ")";
+    highlightClueList(entry);
+  }
+
+  function selectCell(r, c, preferDir){
+    var cell = cellsMap[key(r,c)];
+    if (!cell) return;
+    var sameCell = sel.r === r && sel.c === c;
+    sel.r = r; sel.c = c;
+    if (sameCell){
+      if (cell.across !== null && cell.down !== null) sel.dir = sel.dir === "across" ? "down" : "across";
+    } else if (preferDir && cell[preferDir] !== null && cell[preferDir] !== undefined){
+      sel.dir = preferDir;
+    } else if (cell[sel.dir] === null || cell[sel.dir] === undefined){
+      sel.dir = cell.across !== null && cell.across !== undefined ? "across" : "down";
+    }
+    refreshStatus();
+    render();
+  }
+
+  function selectEntry(idx){
+    var entry = DATA.entries[idx];
+    var cells = entryCells(entry);
+    var target = cells.find(function(p){ var cell = cellsMap[key(p.r,p.c)]; return !cell.userInput; }) || cells[0];
+    sel.r = target.r; sel.c = target.c; sel.dir = entry.direction;
+    refreshStatus();
+    render();
+    hiddenInput.focus();
+  }
+
+  // ---------- movement ----------
+  function inBounds(r,c){ return r >= 0 && r < ROWS && c >= 0 && c < COLS; }
+
+  function moveArrow(dr, dc){
+    var newDir = dc !== 0 ? "across" : "down";
+    var r = sel.r, c = sel.c;
+    var nr = r + dr, nc = c + dc;
+    while (inBounds(nr, nc) && !cellsMap[key(nr,nc)]){ nr += dr; nc += dc; }
+    if (inBounds(nr, nc) && cellsMap[key(nr,nc)]){ r = nr; c = nc; }
+    var cell = cellsMap[key(r,c)];
+    var dir = sel.dir;
+    if (cell[newDir] !== null && cell[newDir] !== undefined) dir = newDir;
+    else if (cell[dir] === null || cell[dir] === undefined) dir = cell.across !== null && cell.across !== undefined ? "across" : "down";
+    sel.r = r; sel.c = c; sel.dir = dir;
+    refreshStatus(); render();
+  }
+
+  function moveNextInWord(){
+    var entry = currentEntry();
+    if (!entry) return;
+    var cells = entryCells(entry);
+    var idx = cells.findIndex(function(p){ return p.r === sel.r && p.c === sel.c; });
+    if (idx >= 0 && idx < cells.length - 1){
+      sel.r = cells[idx+1].r; sel.c = cells[idx+1].c;
+      refreshStatus(); render();
+    } else {
+      advanceToNextEntry();
+    }
+  }
+
+  function advanceToNextEntry(){
+    var entry = currentEntry();
+    var curIdx = DATA.entries.indexOf(entry);
+    for (var step = 1; step <= DATA.entries.length; step++){
+      var idx = (curIdx + step) % DATA.entries.length;
+      var e = DATA.entries[idx];
+      if (!entryComplete(e)){ selectEntry(idx); return; }
+    }
+    // everything else complete; just move within grid harmlessly
+  }
+
+  function movePrevInWord(){
+    var entry = currentEntry();
+    if (!entry) return;
+    var cells = entryCells(entry);
+    var idx = cells.findIndex(function(p){ return p.r === sel.r && p.c === sel.c; });
+    if (idx > 0){ sel.r = cells[idx-1].r; sel.c = cells[idx-1].c; refreshStatus(); render(); }
+  }
+
+  function tabToEntry(delta){
+    var entry = currentEntry();
+    var curIdx = entry ? DATA.entries.indexOf(entry) : 0;
+    var idx = (curIdx + delta + DATA.entries.length) % DATA.entries.length;
+    selectEntry(idx);
+  }
+
+  // ---------- editing ----------
+  function setLetter(ch){
+    if (sel.r === null) return;
+    var cell = cellsMap[key(sel.r, sel.c)];
+    cell.userInput = ch;
+    cell.revealed = false;
+    delete incorrect[key(sel.r, sel.c)];
+    if (!state.started){ state.started = true; startTimer(); }
+    updateClueDone();
+    render();
+    checkWin();
+    moveNextInWord();
+  }
+
+  function clearCurrentCell(){
+    if (sel.r === null) return;
+    var cell = cellsMap[key(sel.r, sel.c)];
+    if (cell.userInput){
+      cell.userInput = ""; cell.revealed = false;
+      delete incorrect[key(sel.r, sel.c)];
+      render(); updateClueDone();
+    } else {
+      movePrevInWord();
+      var pcell = cellsMap[key(sel.r, sel.c)];
+      pcell.userInput = ""; pcell.revealed = false;
+      delete incorrect[key(sel.r, sel.c)];
+      render(); updateClueDone();
+    }
+  }
+
+  function deleteCurrentCell(){
+    if (sel.r === null) return;
+    var cell = cellsMap[key(sel.r, sel.c)];
+    cell.userInput = ""; cell.revealed = false;
+    delete incorrect[key(sel.r, sel.c)];
+    render(); updateClueDone();
+  }
+
+  // ---------- check / reveal / clear ----------
+  function checkPuzzle(){
+    Object.keys(cellsMap).forEach(function(k){
+      var cell = cellsMap[k];
+      if (cell.userInput && cell.userInput !== cell.letter) incorrect[k] = true;
+      else delete incorrect[k];
+    });
+    render();
+  }
+
+  function revealCell(cell){
+    cell.userInput = cell.letter;
+    cell.revealed = true;
+    delete incorrect[key(cell.r, cell.c)];
+  }
+
+  function revealLetter(){
+    if (sel.r === null) return;
+    revealCell(cellsMap[key(sel.r, sel.c)]);
+    render(); updateClueDone(); checkWin();
+  }
+
+  function revealWord(){
+    var entry = currentEntry();
+    if (!entry) return;
+    entryCells(entry).forEach(function(p){ revealCell(cellsMap[key(p.r,p.c)]); });
+    render(); updateClueDone(); checkWin();
+  }
+
+  function revealPuzzle(){
+    if (!confirm("Reveal the entire puzzle? This ends the round.")) return;
+    Object.keys(cellsMap).forEach(function(k){ revealCell(cellsMap[k]); });
+    state.revealedAll = true;
+    stopTimer();
+    render(); updateAllClueDone();
+    showWinModal(true);
+  }
+
+  function clearPuzzle(){
+    if (!confirm("Clear every answer and start over?")) return;
+    Object.keys(cellsMap).forEach(function(k){ var cell = cellsMap[k]; cell.userInput = ""; cell.revealed = false; });
+    incorrect = Object.create(null);
+    state = { started:false, won:false, revealedAll:false, elapsed:0, timerId:null };
+    stopTimer();
+    document.getElementById("timerText").textContent = "00:00";
+    render(); updateAllClueDone();
+    var first = firstCellKey();
+    sel.r = first.r; sel.c = first.c; sel.dir = "across";
+    refreshStatus();
+  }
+
+  // ---------- win detection ----------
+  function checkWin(){
+    if (state.won || state.revealedAll) return;
+    var solved = Object.keys(cellsMap).every(function(k){
+      var cell = cellsMap[k];
+      return cell.userInput === cell.letter;
+    });
+    if (solved){
+      state.won = true;
+      stopTimer();
+      showWinModal(false);
+    }
+  }
+
+  // ---------- timer ----------
+  function fmtTime(s){
+    var m = Math.floor(s / 60), sec = s % 60;
+    return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+  function startTimer(){
+    if (state.timerId) return;
+    state.timerId = setInterval(function(){
+      state.elapsed++;
+      document.getElementById("timerText").textContent = fmtTime(state.elapsed);
+    }, 1000);
+  }
+  function stopTimer(){
+    if (state.timerId){ clearInterval(state.timerId); state.timerId = null; }
+  }
+
+  // ---------- win modal ----------
+  function showWinModal(revealedOnly){
+    var overlay = document.getElementById("winOverlay");
+    var icon = document.getElementById("winIcon");
+    var title = document.getElementById("winTitle");
+    var sub = document.getElementById("winSub");
+    var build = document.getElementById("winBuild");
+    if (revealedOnly){
+      icon.textContent = "↻";
+      icon.style.background = "var(--accent-soft)";
+      icon.style.color = "var(--accent)";
+      title.textContent = "Puzzle revealed";
+      sub.textContent = "No shame in reading the answer key. Clear it to try again clean.";
+      build.innerHTML = '<span class="ok">$</span> dotnet run --reveal<br>All ' + DATA.entries.length + ' answers filled in.';
+    } else {
+      icon.textContent = "✓";
+      icon.style.background = "var(--good-soft)";
+      icon.style.color = "var(--good)";
+      title.textContent = "Build succeeded";
+      sub.textContent = "Every clue resolved correctly. Nice debugging.";
+      build.innerHTML = '<span class="ok">$</span> dotnet test<br>0 Warnings &nbsp; 0 Errors &nbsp; Time Elapsed ' + fmtTime(state.elapsed);
+    }
+    overlay.classList.add("show");
+  }
+  document.getElementById("winClose").addEventListener("click", function(){
+    document.getElementById("winOverlay").classList.remove("show");
+  });
+
+  // ---------- clue lists ----------
+  var listAcross = document.getElementById("listAcross");
+  var listDown = document.getElementById("listDown");
+  var clueRowByEntry = [];
+
+  function buildClueLists(){
+    DATA.entries.forEach(function(entry, idx){
+      var li = document.createElement("li");
+      var row = document.createElement("button");
+      row.className = "cluerow";
+      row.type = "button";
+      row.innerHTML = '<span class="n">' + entry.number + '</span><span class="clue-t">' + escapeHtml(entry.clue) + ' <span style="color:var(--ink-faint)">(' + entry.answer.length + ')</span></span>';
+      row.addEventListener("click", function(){ selectEntry(idx); });
+      li.appendChild(row);
+      (entry.direction === "across" ? listAcross : listDown).appendChild(li);
+      clueRowByEntry[idx] = row;
+    });
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function highlightClueList(entry){
+    var idx = DATA.entries.indexOf(entry);
+    clueRowByEntry.forEach(function(row, i){
+      row.classList.toggle("active", i === idx);
+    });
+    var active = clueRowByEntry[idx];
+    if (active) active.scrollIntoView({ block: "nearest" });
+  }
+
+  function updateClueDone(){
+    var entry = currentEntry();
+    if (!entry) return;
+    var idx = DATA.entries.indexOf(entry);
+    clueRowByEntry[idx].classList.toggle("done", entryComplete(entry));
+  }
+
+  function updateAllClueDone(){
+    DATA.entries.forEach(function(entry, idx){
+      clueRowByEntry[idx].classList.toggle("done", entryComplete(entry));
+    });
+  }
+
+  // ---------- clue tabs (mobile-friendly) ----------
+  var tabButtons = document.querySelectorAll(".clue-tabs button");
+  tabButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabButtons.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      var tab = btn.getAttribute("data-tab");
+      document.getElementById("colAcross").style.display = tab === "across" ? "" : (window.innerWidth < 640 ? "none" : "");
+      document.getElementById("colDown").style.display = tab === "down" ? "" : (window.innerWidth < 640 ? "none" : "");
+    });
+  });
+  function applyTabVisibility(){
+    if (window.innerWidth < 640){
+      var active = document.querySelector(".clue-tabs button.active").getAttribute("data-tab");
+      document.getElementById("colAcross").style.display = active === "across" ? "" : "none";
+      document.getElementById("colDown").style.display = active === "down" ? "" : "none";
+    } else {
+      document.getElementById("colAcross").style.display = "";
+      document.getElementById("colDown").style.display = "";
+    }
+  }
+  window.addEventListener("resize", applyTabVisibility);
+
+  // ---------- input wiring ----------
+  canvas.addEventListener("click", function(e){
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left, y = e.clientY - rect.top;
+    var c = Math.floor(x / cellSize), r = Math.floor(y / cellSize);
+    if (!cellsMap[key(r,c)]) return;
+    selectCell(r, c, null);
+    hiddenInput.focus({ preventScroll: true });
+  });
+
+  hiddenInput.addEventListener("input", function(){
+    var val = hiddenInput.value;
+    hiddenInput.value = "";
+    if (!val) return;
+    var ch = val.charAt(val.length - 1).toUpperCase();
+    if (/^[A-Z]$/.test(ch)) setLetter(ch);
+  });
+
+  hiddenInput.addEventListener("keydown", function(e){
+    switch (e.key){
+      case "Backspace": e.preventDefault(); clearCurrentCell(); break;
+      case "Delete": e.preventDefault(); deleteCurrentCell(); break;
+      case "ArrowLeft": e.preventDefault(); moveArrow(0, -1); break;
+      case "ArrowRight": e.preventDefault(); moveArrow(0, 1); break;
+      case "ArrowUp": e.preventDefault(); moveArrow(-1, 0); break;
+      case "ArrowDown": e.preventDefault(); moveArrow(1, 0); break;
+      case "Tab": e.preventDefault(); tabToEntry(e.shiftKey ? -1 : 1); break;
+      case "Enter": e.preventDefault(); selectCell(sel.r, sel.c, null); break;
+    }
+  });
+
+  document.getElementById("prevClue").addEventListener("click", function(){ tabToEntry(-1); hiddenInput.focus(); });
+  document.getElementById("nextClue").addEventListener("click", function(){ tabToEntry(1); hiddenInput.focus(); });
+
+  document.getElementById("btnCheck").addEventListener("click", checkPuzzle);
+  document.getElementById("btnClear").addEventListener("click", clearPuzzle);
+
+  var revealMenu = document.getElementById("revealMenu");
+  document.getElementById("revealBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    revealMenu.classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ revealMenu.classList.remove("open"); });
+  revealMenu.querySelectorAll("[data-reveal]").forEach(function(btn){
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      revealMenu.classList.remove("open");
+      var mode = btn.getAttribute("data-reveal");
+      if (mode === "letter") revealLetter();
+      else if (mode === "word") revealWord();
+      else revealPuzzle();
+    });
+  });
+
+  window.addEventListener("resize", resizeCanvas);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+
+  // ---------- boot ----------
+  buildClueLists();
+  applyTabVisibility();
+  var first = firstCellKey();
+  sel.r = first.r; sel.c = first.c; sel.dir = "across";
+  resizeCanvas();
+  refreshStatus();
+  document.title = "C#, Interrupted";
+})();
+</script>
+</body>
+</html>

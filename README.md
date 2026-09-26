@@ -3,7 +3,7 @@ CSharp, Interrupted Crossword
 
 # Play CSharp Crossword
 
-[Play CSharp Crossword](https://github.com/schwarrior/CSharpCrossword/csharp-interrupted-crossword.html)
+[Play CSharp Crossword](https://schwarrior.github.io/CSharpCrossword/csharp-interrupted-crossword.html)
 
 
 # Claude Conversation Alpha 2026-09-19
